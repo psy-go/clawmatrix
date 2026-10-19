@@ -22,8 +22,8 @@ func isBrowserNav(r *http.Request) bool {
 	return strings.Contains(r.Header.Get("Accept"), "text/html")
 }
 
-func NewRouter(hub *Hub, scheduler CronScheduler, oidc *OIDCConfig, store storage.Store, publicBaseURL, signSecret string) http.Handler {
-	h := NewHandlers(hub, scheduler, oidc, store, publicBaseURL, signSecret)
+func NewRouter(hub *Hub, scheduler CronScheduler, oidc *OIDCConfig, store storage.Store, publicBaseURL, signSecret string, github GitHubHookConfig) http.Handler {
+	h := NewHandlers(hub, scheduler, oidc, store, publicBaseURL, signSecret, github)
 
 	// spaOr serves the single-page app for browser navigations and the API
 	// handler for everything else — lets UI tab paths (/agents, /uploads, …)
@@ -53,6 +53,9 @@ func NewRouter(hub *Hub, scheduler CronScheduler, oidc *OIDCConfig, store storag
 	mux.HandleFunc("GET /health", h.Health)
 	mux.HandleFunc("GET /.well-known/agent-card.json", h.AgentCard)
 	mux.HandleFunc("GET /a2a/{agent}/agent-card.json", h.AgentCard)
+
+	// GitHub webhooks — authenticated by HMAC signature, not a bearer token
+	mux.HandleFunc("POST /hooks/github", h.GitHubWebhook)
 
 	// Auth
 	mux.HandleFunc("POST /auth/login", h.Login)

@@ -112,7 +112,19 @@ func main() {
 	}
 	log.Printf("uploads: backend=%s", store.Backend())
 
-	router := api.NewRouter(hub, scheduler, oidcCfg, store, cfg.PublicBaseURL, cfg.JWTSecret)
+	github := api.GitHubHookConfig{
+		Secret:   cfg.GitHubWebhookSecret,
+		Agent:    cfg.GitHubReviewAgent,
+		BotLogin: cfg.GitHubBotLogin,
+	}
+	switch {
+	case github.Secret != "" && github.Agent != "":
+		log.Printf("github webhook: enabled (agent: %s, bot: %s)", github.Agent, github.BotLogin)
+	case github.Secret != "" || github.Agent != "":
+		log.Printf("github webhook: disabled — set both GITHUB_WEBHOOK_SECRET and GITHUB_REVIEW_AGENT")
+	}
+
+	router := api.NewRouter(hub, scheduler, oidcCfg, store, cfg.PublicBaseURL, cfg.JWTSecret, github)
 	fmt.Println(`
 +--------------------+
 |    ClawMatrix      |

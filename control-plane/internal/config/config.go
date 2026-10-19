@@ -25,6 +25,10 @@ type Config struct {
 	UploadDir     string // filesystem backend storage dir
 	UploadBucket  string // bucket name for gcs/s3/r2 backends
 	PublicBaseURL string // externally-reachable CP base URL for signed file links (no trailing slash)
+	// GitHub PR review webhook — optional; POST /hooks/github is off unless secret + agent are set
+	GitHubWebhookSecret string // shared with the GitHub webhook
+	GitHubReviewAgent   string // agent profile that reviews PRs
+	GitHubBotLogin      string // GitHub login the reviewer posts as
 }
 
 func Load() *Config {
@@ -57,6 +61,9 @@ func Load() *Config {
 		UploadDir:           envOr("UPLOAD_DIR", "/data/uploads"),
 		UploadBucket:        os.Getenv("UPLOAD_BUCKET"),
 		PublicBaseURL:       strings.TrimRight(os.Getenv("PUBLIC_BASE_URL"), "/"),
+		GitHubWebhookSecret: os.Getenv("GITHUB_WEBHOOK_SECRET"),
+		GitHubReviewAgent:   os.Getenv("GITHUB_REVIEW_AGENT"),
+		GitHubBotLogin:      os.Getenv("GITHUB_BOT_LOGIN"),
 	}
 }
 

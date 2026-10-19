@@ -38,11 +38,13 @@ type Handlers struct {
 	store         storage.Store
 	publicBaseURL string // externally-reachable CP base for signed file links (no trailing slash)
 	signSecret    []byte // HMAC key for signed upload-access tokens
+	github        GitHubHookConfig
+	githubSeen    *seenSet // dedupes webhook deliveries and reviewed heads
 }
 
 type J = map[string]any
 
-func NewHandlers(hub *Hub, scheduler CronScheduler, oidc *OIDCConfig, store storage.Store, publicBaseURL, signSecret string) *Handlers {
+func NewHandlers(hub *Hub, scheduler CronScheduler, oidc *OIDCConfig, store storage.Store, publicBaseURL, signSecret string, github GitHubHookConfig) *Handlers {
 	return &Handlers{
 		hub:           hub,
 		scheduler:     scheduler,
@@ -50,6 +52,8 @@ func NewHandlers(hub *Hub, scheduler CronScheduler, oidc *OIDCConfig, store stor
 		store:         store,
 		publicBaseURL: strings.TrimRight(publicBaseURL, "/"),
 		signSecret:    []byte(signSecret),
+		github:        github,
+		githubSeen:    newSeenSet(24 * time.Hour),
 	}
 }
 
